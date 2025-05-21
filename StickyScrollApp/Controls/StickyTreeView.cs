@@ -12,6 +12,26 @@ namespace StickyScrollApp.Controls
         private StackPanel _stickyHeaderPanel;
         private bool _isUpdatingStickyHeaders; // 再帰防止用フラグ
 
+        // AllowStickyScroll 依存プロパティ
+        public static readonly DependencyProperty AllowStickyScrollProperty =
+            DependencyProperty.Register(
+                nameof(AllowStickyScroll),
+                typeof(bool),
+                typeof(StickyTreeView),
+                new PropertyMetadata(true, OnAllowStickyScrollChanged));
+
+        public bool AllowStickyScroll
+        {
+            get => (bool)GetValue(AllowStickyScrollProperty);
+            set => SetValue(AllowStickyScrollProperty, value);
+        }
+
+        private static void OnAllowStickyScrollChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+        {
+            var control = d as StickyTreeView;
+            control?.UpdateStickyHeaders();
+        }
+
         static StickyTreeView()
         {
             DefaultStyleKeyProperty.OverrideMetadata(typeof(StickyTreeView),
@@ -38,6 +58,12 @@ namespace StickyScrollApp.Controls
         {
             if (_scrollViewer == null || _stickyHeaderPanel == null)
                 return;
+
+            if (!AllowStickyScroll)
+            {
+                _stickyHeaderPanel.Children.Clear();
+                return;
+            }
 
             try
             {

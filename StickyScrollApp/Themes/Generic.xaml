@@ -11,10 +11,10 @@
           <Grid>
             <ScrollViewer x:Name="PART_ScrollViewer"
                           Grid.Row="1"
-                          CanContentScroll="False"
+                          CanContentScroll="True"
                           HorizontalScrollBarVisibility="{TemplateBinding ScrollViewer.HorizontalScrollBarVisibility}"
                           VerticalScrollBarVisibility="{TemplateBinding ScrollViewer.VerticalScrollBarVisibility}">
-              <ItemsPresenter />
+              <ItemsPresenter SnapsToDevicePixels="True" />
             </ScrollViewer>
             <Border Background="#F8F8F8"
                     VerticalAlignment="Top"
@@ -23,6 +23,13 @@
             </Border>
           </Grid>
         </ControlTemplate>
+      </Setter.Value>
+    </Setter>
+    <Setter Property="ItemsPanel">
+      <Setter.Value>
+        <ItemsPanelTemplate>
+          <VirtualizingStackPanel IsVirtualizing="True" VirtualizationMode="Recycling" />
+        </ItemsPanelTemplate>
       </Setter.Value>
     </Setter>
     <Setter Property="ItemContainerStyle">

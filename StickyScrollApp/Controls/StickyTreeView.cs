@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
@@ -133,8 +134,14 @@ namespace StickyScrollApp.Controls
                 }
 
                 // 祖先ノードを取得しヘッダーとして表示
-                var ancestors = GetAncestors(topItem);
+                var ancestors = GetAncestors(topItem).ToList();
 
+                // 既存のChildrenと比較し、同じなら何もしない
+                if (IsSameHeader(ancestors))
+                {
+                    return;
+                }
+                
                 _stickyHeaderPanel.Children.Clear();
                 int depth = 1;
                 foreach (var ancestor in ancestors)
@@ -147,6 +154,27 @@ namespace StickyScrollApp.Controls
             {
                 _isUpdatingStickyHeaders = false; // 再帰防止終了
             }
+        }
+
+        /// <summary>
+        /// ancestorsと_stickyHeaderPanel.Childrenの内容が同じか判定する
+        /// </summary>
+        /// <param name="ancestors"></param>
+        /// <returns></returns>
+        private bool IsSameHeader(List<TreeViewItem> ancestors)
+        {
+            if (_stickyHeaderPanel.Children.Count != ancestors.Count)
+                return false;
+
+            for (int i = 0; i < ancestors.Count; i++)
+            {
+                var presenter = _stickyHeaderPanel.Children[i] as ContentPresenter;
+                if (presenter == null || presenter.Content != ancestors[i].DataContext)
+                {
+                    return false;
+                }
+            }
+            return true;
         }
 
         /// <summary>

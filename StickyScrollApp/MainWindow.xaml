@@ -6,7 +6,7 @@
         xmlns:local="clr-namespace:StickyScrollApp"
         xmlns:controls="clr-namespace:StickyScrollApp.Controls"
         mc:Ignorable="d"
-        Title="StickyScrollApp" Height="350" Width="525">
+        Title="StickyScrollApp" Height="480" Width="260">
     <Grid>
         <controls:StickyTreeView x:Name="stickyTreeView" 
                                 ItemsSource="{Binding RootItems}" 

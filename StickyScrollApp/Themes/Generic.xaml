@@ -16,9 +16,9 @@
                           VerticalScrollBarVisibility="{TemplateBinding ScrollViewer.VerticalScrollBarVisibility}">
               <ItemsPresenter />
             </ScrollViewer>
-            <Border Background="White"
+            <Border Background="#F8F8F8"
                     VerticalAlignment="Top"
-                    Margin="0,0,16,0">
+                    Margin="0,0,18,0">
               <StackPanel x:Name="PART_StickyHeaderPanel"/>
             </Border>
           </Grid>
@@ -39,8 +39,11 @@
     <Border Background="LightBlue" 
             BorderBrush="White"
             BorderThickness="1"
-            Padding="2" CornerRadius="2" HorizontalAlignment="Left">
-      <TextBlock Text="{Binding Name}" />
+            HorizontalAlignment="Left"
+            Padding="2" CornerRadius="2">
+      <Grid>
+        <TextBlock Text="{Binding Name}" />
+      </Grid>
     </Border>
   </HierarchicalDataTemplate>
 
@@ -48,7 +51,8 @@
     <Border Background="LightGreen" 
             BorderBrush="White"
             BorderThickness="1"
-            Padding="2" CornerRadius="2" HorizontalAlignment="Left">
+            HorizontalAlignment="Left"
+            Padding="2" CornerRadius="2">
       <TextBlock Text="{Binding Name}" />
     </Border>
   </DataTemplate>

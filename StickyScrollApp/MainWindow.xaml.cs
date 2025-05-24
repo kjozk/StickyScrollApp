@@ -1,19 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
-using StickyScrollApp.ViewModels;
+﻿using StickyScrollApp.ViewModels;
 using System.Collections.ObjectModel;
+using System.Windows;
 
 namespace StickyScrollApp
 {
@@ -47,6 +34,7 @@ namespace StickyScrollApp
             var subFolderB1 = new FolderViewModel { Name = "サブフォルダB-1" };
             subFolderB1.Children.Add(new FileViewModel { Name = "ファイルB-1-1" });
             subFolderB1.Children.Add(new FileViewModel { Name = "ファイルB-1-2" });
+            subFolderB1.Children.Add(new FileViewModel { Name = "ファイルB-1-3" });
             var subFolderB2 = new FolderViewModel { Name = "サブフォルダB-2" };
             for (int i = 1; i <= 5; i++)
             {

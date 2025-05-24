@@ -17,7 +17,7 @@
                             <ItemsPresenter SnapsToDevicePixels="True" />
                         </ScrollViewer>
                         <HeaderedContentControl x:Name="PART_StickyHeaderControl"
-                                                VerticalAlignment="Top"
+                                                VerticalAlignment="Top" HorizontalAlignment="Left"
                                                 Template="{TemplateBinding StickyHeaderContentTemplate}" />
                     </Grid>
                 </ControlTemplate>

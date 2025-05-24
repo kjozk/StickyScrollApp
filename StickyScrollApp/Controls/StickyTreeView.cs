@@ -9,10 +9,6 @@ namespace StickyScrollApp.Controls
     /// </summary>
     public class StickyTreeView : TreeView
     {
-        // テンプレートパーツ名の定数
-        private const string PART_ScrollViewer = "PART_ScrollViewer";
-        private const string PART_StickyHeaderControl = "PART_StickyHeaderControl";
-
         // スクロールビューとヘッダーパネルの参照
         private StickyScrollBehavior _stickyBehavior;　
 
@@ -82,8 +78,8 @@ namespace StickyScrollApp.Controls
             base.OnApplyTemplate();
 
             // テンプレート適用時にパーツ取得とイベントフック
-            if (GetTemplateChild(PART_ScrollViewer) is ScrollViewer scrollViewer &&
-                GetTemplateChild(PART_StickyHeaderControl) is HeaderedContentControl stickyHeaderControl)
+            if (GetTemplateChild(StickyScrollBehavior.PART_ScrollViewer) is ScrollViewer scrollViewer &&
+                GetTemplateChild(StickyScrollBehavior.PART_StickyHeaderControl) is HeaderedContentControl stickyHeaderControl)
             {
                 scrollViewer.ScrollChanged += (sender, e) => _stickyBehavior.UpdateStickyHeaders();
 

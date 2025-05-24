@@ -16,7 +16,7 @@
                           VerticalScrollBarVisibility="{TemplateBinding ScrollViewer.VerticalScrollBarVisibility}">
               <ItemsPresenter SnapsToDevicePixels="True" />
             </ScrollViewer>
-            <Border Background="#F8F8F8"
+            <Border Background="LightYellow"
                     VerticalAlignment="Top"
                     Margin="0,0,18,0">
               <StackPanel x:Name="PART_StickyHeaderPanel"/>
@@ -37,6 +37,15 @@
         <Style TargetType="TreeViewItem">
           <Setter Property="IsExpanded" Value="{Binding IsExpanded, Mode=TwoWay}" />
         </Style>
+      </Setter.Value>
+    </Setter>
+    <Setter Property="StickyHeaderContentTemplate">
+      <Setter.Value>
+        <ControlTemplate TargetType="ContentControl">
+          <Grid>
+            <ContentPresenter Content="{TemplateBinding Content}" ContentTemplate="{TemplateBinding ContentTemplate}" />
+          </Grid>
+        </ControlTemplate>
       </Setter.Value>
     </Setter>
   </Style>

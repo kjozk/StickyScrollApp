@@ -33,12 +33,31 @@ namespace StickyScrollApp.Controls
                 new PropertyMetadata(true, OnAllowStickyScrollChanged));
 
         /// <summary>
+        /// Stickyヘッダー用のControlTemplateを指定する依存プロパティ
+        /// </summary>
+        public static readonly DependencyProperty StickyHeaderContentTemplateProperty =
+            DependencyProperty.Register(
+                nameof(StickyHeaderContentTemplate),
+                typeof(ControlTemplate),
+                typeof(StickyTreeView),
+                new PropertyMetadata(null));
+
+        /// <summary>
         /// AllowStickyScrollプロパティ
         /// </summary>
         public bool AllowStickyScroll
         {
             get => (bool)GetValue(AllowStickyScrollProperty);
             set => SetValue(AllowStickyScrollProperty, value);
+        }
+
+        /// <summary>
+        /// StickyHeaderContentTemplateプロパティ
+        /// </summary>
+        public ControlTemplate StickyHeaderContentTemplate
+        {
+            get => (ControlTemplate)GetValue(StickyHeaderContentTemplateProperty);
+            set => SetValue(StickyHeaderContentTemplateProperty, value);
         }
 
         /// <summary>
@@ -179,65 +198,83 @@ namespace StickyScrollApp.Controls
 
         /// <summary>
         /// スクロールビュー内で一番上に表示されているTreeViewItemを返す（上端に最も近いもの）
+        /// StickyHeaderPanelの高さは、更新後の想定高さで見積もって判定する
         /// </summary>
         private TreeViewItem FindTopVisibleTreeViewItem()
         {
             if (_scrollViewer == null || _stickyHeaderPanel == null) return null;
 
+            // 1. まず全ての候補TreeViewItemを列挙
             var visibleItems = new List<TreeViewItem>();
             FindVisibleTreeViewItemsRecursive(this, visibleItems);
 
-            TreeViewItem topVisibleItem = null;
-            double minDistance = double.MaxValue;
+            // 2. 祖先ノード数の最大値を取得
+            int estimatedHeaderCount = GetMaxAncestorCount(visibleItems);
 
-            // Stickyヘッダーパネルの高さを取得
-            double stickyHeaderHeight = _stickyHeaderPanel.ActualHeight;
+            // 3. 仮のStickyHeaderPanel高さを計算
+            double estimatedStickyHeaderHeight = EstimateStickyHeaderHeight(estimatedHeaderCount);
 
-            foreach (var tvi in visibleItems)
+            // 4. StickyHeaderPanelの高さを仮定して最上位のTreeViewItemを判定
+            return FindTopItem(visibleItems, estimatedStickyHeaderHeight);
+
+            // --- ローカルメソッド群 ---
+
+            int GetMaxAncestorCount(List<TreeViewItem> items)
             {
-                try
+                int max = 0;
+                foreach (var tvi in items)
                 {
-                    // TreeViewItemの上端座標をScrollViewer基準で取得
-                    var transform = tvi.TransformToAncestor(_scrollViewer);
-                    var originPoint = new Point(0, 0);
-                    var itemTopLeft = transform.Transform(originPoint);
-                    var point = transform.Transform(originPoint);
+                    int count = GetAncestors(tvi).Count();
+                    if (count > max) max = count;
+                }
+                return max;
+            }
 
-                    // 表示領域内に一部でも表示されているか判定
-                    var itemRect = new Rect(point, tvi.RenderSize);
-                    var viewportRect = new Rect(originPoint, new Size(_scrollViewer.ViewportWidth, _scrollViewer.ViewportHeight));
-                    var stickyHeaderRect = new Rect(originPoint, new Size(_scrollViewer.ViewportWidth, stickyHeaderHeight));
+            double EstimateStickyHeaderHeight(int headerCount)
+            {
+                double headerElementHeight = 0;
+                if (_stickyHeaderPanel.Children.Count > 0 && _stickyHeaderPanel.Children[0] is FrameworkElement fe)
+                    headerElementHeight = fe.ActualHeight;
+                else
+                    headerElementHeight = 24; // デフォルト値
+                return headerElementHeight * headerCount;
+            }
 
-                    // 表示領域内に一部でも表示されているか判定
-                    if (itemRect.IntersectsWith(viewportRect))
+            TreeViewItem FindTopItem(List<TreeViewItem> items, double stickyHeaderHeight)
+            {
+                TreeViewItem topVisibleItem = null;
+                double minDistance = double.MaxValue;
+
+                foreach (var tvi in items)
+                {
+                    try
                     {
-                        // Stickyヘッダーパネルと重なっていないか判定
-                        if (itemRect.IntersectsWith(stickyHeaderRect))
-                        {
-                            // 完全にStickyヘッダーパネルの裏に隠れているのでスキップ
-                            continue;
-                        }
+                        var transform = tvi.TransformToAncestor(_scrollViewer);
+                        var point = transform.Transform(new Point(0, 0));
+                        var itemRect = new Rect(point, tvi.RenderSize);
 
-                        // Stickyヘッダーパネルの下端より下にある最上位の要素を選ぶ
-                        double distance = Math.Abs(itemRect.Top - stickyHeaderRect.Bottom);
-                        if (distance < minDistance)
+                        // 仮定したStickyHeaderPanelの下端より下に一部でも表示されているか
+                        if (itemRect.Bottom > stickyHeaderHeight && itemRect.Top < _scrollViewer.ViewportHeight)
                         {
-                            minDistance = distance;
-                            topVisibleItem = tvi;
-                        }
-                        // Stickyヘッダーパネルの下端にぴったりなら即返す
-                        if (itemRect.Top == stickyHeaderRect.Bottom)
-                        {
-                            return tvi;
+                            double distance = Math.Abs(itemRect.Top - stickyHeaderHeight);
+                            if (distance < minDistance)
+                            {
+                                minDistance = distance;
+                                topVisibleItem = tvi;
+                            }
+                            if (itemRect.Top == stickyHeaderHeight)
+                            {
+                                return tvi;
+                            }
                         }
                     }
+                    catch (InvalidOperationException)
+                    {
+                        continue;
+                    }
                 }
-                catch (InvalidOperationException)
-                {
-                    continue;
-                }
+                return topVisibleItem;
             }
-            return topVisibleItem;
         }
 
         /// <summary>
@@ -305,6 +342,9 @@ namespace StickyScrollApp.Controls
         /// <summary>
         /// 要素がScrollViewer内で一部でも表示されているか判定
         /// </summary>
+        /// <param name="sv"></param>
+        /// <param name="element"></param>
+        /// <returns></returns>
         private bool IsElementPartiallyVisibleInScrollViewer(ScrollViewer sv, FrameworkElement element)
         {
             if (element == null) return false;
@@ -321,7 +361,7 @@ namespace StickyScrollApp.Controls
         /// データからTreeViewItemを探す
         /// </summary>
         /// <param name="container"></param>
-        /// <param name="data"></param>
+        /// <param {data"></param>
         /// <returns></returns>
         private TreeViewItem FindTreeViewItemForData(ItemsControl container, object data)
         {
@@ -389,13 +429,30 @@ namespace StickyScrollApp.Controls
             var data = ancestor.DataContext;
             double indent = 20 * depth;
 
-            return new ContentPresenter
+            if (this.StickyHeaderContentTemplate != null)
             {
-                Content = data,
-                Margin = new Thickness(indent, 0, 0, 0),
-                ContentTemplate = this.ItemTemplate,
-                ContentTemplateSelector = this.ItemTemplateSelector
-            };
+                var headered = new ContentControl
+                {
+                    Content = data,
+                    Margin = new Thickness(indent, 0, 0, 0),
+                    ContentTemplate = this.ItemTemplate,
+                    ContentTemplateSelector = this.ItemTemplateSelector,
+                    Template = this.StickyHeaderContentTemplate
+                };
+                return headered;
+            }
+            else
+            {
+                // 従来通り
+                return new ContentPresenter
+                {
+                    Content = data,
+                    Margin = new Thickness(indent, 0, 0, 0),
+                    ContentTemplate = this.ItemTemplate,
+                    ContentTemplateSelector = this.ItemTemplateSelector
+                };
+            }
         }
     }
 }
+

@@ -23,6 +23,11 @@ namespace StickyScrollApp.ViewModels
         }
 
         public event PropertyChangedEventHandler PropertyChanged;
+
+        public override string ToString()
+        {
+            return this.Name;
+        }
     }
 
     public class FolderViewModel : TreeItemViewModel { }

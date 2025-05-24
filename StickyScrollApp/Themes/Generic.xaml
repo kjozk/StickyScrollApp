@@ -4,73 +4,75 @@
                     xmlns:vm="clr-namespace:StickyScrollApp.ViewModels"
                     xmlns:controls="clr-namespace:StickyScrollApp.Controls">
 
-  <Style TargetType="{x:Type controls:StickyTreeView}">
-    <Setter Property="Template">
-      <Setter.Value>
-        <ControlTemplate TargetType="{x:Type controls:StickyTreeView}">
-          <Grid>
-            <ScrollViewer x:Name="PART_ScrollViewer"
-                          Grid.Row="1"
-                          CanContentScroll="True"
-                          HorizontalScrollBarVisibility="{TemplateBinding ScrollViewer.HorizontalScrollBarVisibility}"
-                          VerticalScrollBarVisibility="{TemplateBinding ScrollViewer.VerticalScrollBarVisibility}">
-              <ItemsPresenter SnapsToDevicePixels="True" />
-            </ScrollViewer>
-            <Border Background="LightYellow"
-                    VerticalAlignment="Top"
-                    Margin="0,0,18,0">
-              <StackPanel x:Name="PART_StickyHeaderPanel"/>
-            </Border>
-          </Grid>
-        </ControlTemplate>
-      </Setter.Value>
-    </Setter>
-    <Setter Property="ItemsPanel">
-      <Setter.Value>
-        <ItemsPanelTemplate>
-          <VirtualizingStackPanel IsVirtualizing="True" VirtualizationMode="Recycling" />
-        </ItemsPanelTemplate>
-      </Setter.Value>
-    </Setter>
-    <Setter Property="ItemContainerStyle">
-      <Setter.Value>
-        <Style TargetType="TreeViewItem">
-          <Setter Property="IsExpanded" Value="{Binding IsExpanded, Mode=TwoWay}" />
-        </Style>
-      </Setter.Value>
-    </Setter>
-    <Setter Property="StickyHeaderContentTemplate">
-      <Setter.Value>
-        <ControlTemplate TargetType="ContentControl">
-          <Grid>
-            <ContentPresenter Content="{TemplateBinding Content}" ContentTemplate="{TemplateBinding ContentTemplate}" />
-          </Grid>
-        </ControlTemplate>
-      </Setter.Value>
-    </Setter>
-  </Style>
+    <Style TargetType="{x:Type controls:StickyTreeView}">
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="{x:Type controls:StickyTreeView}">
+                    <Grid>
+                        <ScrollViewer x:Name="PART_ScrollViewer"
+                                      Grid.Row="1"
+                                      CanContentScroll="True"
+                                      HorizontalScrollBarVisibility="{TemplateBinding ScrollViewer.HorizontalScrollBarVisibility}"
+                                      VerticalScrollBarVisibility="{TemplateBinding ScrollViewer.VerticalScrollBarVisibility}">
+                            <ItemsPresenter SnapsToDevicePixels="True" />
+                        </ScrollViewer>
+                        <HeaderedContentControl x:Name="PART_StickyHeaderControl"
+                                                VerticalAlignment="Top"
+                                                Template="{TemplateBinding StickyHeaderContentTemplate}" />
+                    </Grid>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+        <Setter Property="ItemsPanel">
+            <Setter.Value>
+                <ItemsPanelTemplate>
+                    <VirtualizingStackPanel IsVirtualizing="True" VirtualizationMode="Recycling" />
+                </ItemsPanelTemplate>
+            </Setter.Value>
+        </Setter>
+        <Setter Property="ItemContainerStyle">
+            <Setter.Value>
+                <Style TargetType="TreeViewItem">
+                    <Setter Property="IsExpanded" Value="{Binding IsExpanded, Mode=TwoWay}" />
+                </Style>
+            </Setter.Value>
+        </Setter>
+        <Setter Property="StickyHeaderContentTemplate">
+            <Setter.Value>
+                <ControlTemplate TargetType="HeaderedContentControl">
+                    <Border Background="LightYellow" Padding="20,0,0,0">
+                        <StackPanel>
+                            <ContentPresenter Content="{TemplateBinding Header}"
+                                              ContentTemplate="{TemplateBinding ContentTemplate}"/>
+                            <ContentPresenter Content="{TemplateBinding Content}"/>
+                        </StackPanel>
+                    </Border>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
 
-  <!-- FolderViewModel用: 階層構造をサポート -->
-  <HierarchicalDataTemplate DataType="{x:Type vm:FolderViewModel}" ItemsSource="{Binding Children}">
-    <Border Background="LightBlue" 
-            BorderBrush="White"
-            BorderThickness="1"
-            HorizontalAlignment="Left"
-            Padding="2" CornerRadius="2">
-      <Grid>
-        <TextBlock Text="{Binding Name}" />
-      </Grid>
-    </Border>
-  </HierarchicalDataTemplate>
+    <!-- FolderViewModel用: 階層構造をサポート -->
+    <HierarchicalDataTemplate DataType="{x:Type vm:FolderViewModel}" ItemsSource="{Binding Children}">
+        <Border Background="LightBlue" 
+                BorderBrush="White"
+                BorderThickness="1"
+                HorizontalAlignment="Left"
+                Padding="2" CornerRadius="2">
+            <Grid>
+                <TextBlock Text="{Binding Name}" />
+            </Grid>
+        </Border>
+    </HierarchicalDataTemplate>
 
-  <DataTemplate DataType="{x:Type vm:FileViewModel}">
-    <Border Background="LightGreen" 
-            BorderBrush="White"
-            BorderThickness="1"
-            HorizontalAlignment="Left"
-            Padding="2" CornerRadius="2">
-      <TextBlock Text="{Binding Name}" />
-    </Border>
-  </DataTemplate>
+    <DataTemplate DataType="{x:Type vm:FileViewModel}">
+        <Border Background="LightGreen" 
+                BorderBrush="White"
+                BorderThickness="1"
+                HorizontalAlignment="Left"
+                Padding="2" CornerRadius="2">
+            <TextBlock Text="{Binding Name}" />
+        </Border>
+    </DataTemplate>
 
 </ResourceDictionary>

@@ -5,13 +5,14 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:StickyScrollApp"
         xmlns:controls="clr-namespace:StickyScrollApp.Controls"
+        xmlns:i="http://schemas.microsoft.com/xaml/behaviors"
         mc:Ignorable="d"
-        Title="StickyScrollApp" Height="480" Width="260">
+        Title="StickyScrollApp" Height="480" Width="320">
     <Grid>
-        <controls:StickyTreeView x:Name="stickyTreeView" 
-                                ItemsSource="{Binding RootItems}" 
-                                Margin="10" 
-                                BorderThickness="1"
-                                ItemTemplateSelector="{x:Null}"/>
+        <TreeView ItemsSource="{Binding RootItems}" Margin="10" BorderThickness="1" Style="{StaticResource StickyTreeViewStyle}">
+            <i:Interaction.Behaviors>
+                <controls:StickyTreeViewBehavior AllowStickyScroll="True" StickyHeaderContentTemplate="{StaticResource StickyHeaderTemplate}"/>
+            </i:Interaction.Behaviors>
+        </TreeView>
     </Grid>
 </Window>

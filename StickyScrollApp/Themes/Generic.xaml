@@ -4,25 +4,35 @@
                     xmlns:vm="clr-namespace:StickyScrollApp.ViewModels"
                     xmlns:controls="clr-namespace:StickyScrollApp.Controls">
 
-    <Style TargetType="{x:Type controls:StickyTreeView}">
-        <Setter Property="Template">
-            <Setter.Value>
-                <ControlTemplate TargetType="{x:Type controls:StickyTreeView}">
-                    <Grid>
-                        <ScrollViewer x:Name="PART_ScrollViewer"
-                                      Grid.Row="1"
-                                      CanContentScroll="True"
-                                      HorizontalScrollBarVisibility="{TemplateBinding ScrollViewer.HorizontalScrollBarVisibility}"
-                                      VerticalScrollBarVisibility="{TemplateBinding ScrollViewer.VerticalScrollBarVisibility}">
-                            <ItemsPresenter SnapsToDevicePixels="True" />
-                        </ScrollViewer>
-                        <HeaderedContentControl x:Name="PART_StickyHeaderControl"
-                                                VerticalAlignment="Top" HorizontalAlignment="Left"
-                                                Template="{TemplateBinding StickyHeaderContentTemplate}" />
-                    </Grid>
-                </ControlTemplate>
-            </Setter.Value>
-        </Setter>
+    <!-- StickyHeaderTemplate: Stickyヘッダー内で疑似的なTreeViewを表現するテンプレート -->
+    <ControlTemplate x:Key="StickyHeaderTemplate" TargetType="HeaderedContentControl">
+        <Border Background="LightYellow" Padding="20,0,0,0">
+            <StackPanel>
+                <ContentPresenter Content="{TemplateBinding Header}" ContentTemplate="{TemplateBinding ContentTemplate}"/>
+                <ContentPresenter Content="{TemplateBinding Content}"/>
+            </StackPanel>
+        </Border>
+    </ControlTemplate>
+   
+    
+    <!-- StickyTreeViewStyle: StickyTreeViewBehaviorに対応したテンプレート -->
+    <ControlTemplate x:Key="StickyTreeViewTemplate" TargetType="{x:Type TreeView}">
+        <Grid>
+            <ScrollViewer x:Name="PART_ScrollViewer"
+                          Grid.Row="1"
+                          CanContentScroll="True"
+                          HorizontalScrollBarVisibility="{TemplateBinding ScrollViewer.HorizontalScrollBarVisibility}"
+                          VerticalScrollBarVisibility="{TemplateBinding ScrollViewer.VerticalScrollBarVisibility}">
+                <ItemsPresenter SnapsToDevicePixels="True" />
+            </ScrollViewer>
+            <HeaderedContentControl x:Name="PART_StickyHeaderControl"
+                                    VerticalAlignment="Top" HorizontalAlignment="Left"
+                                    Template="{StaticResource StickyHeaderTemplate}" />
+        </Grid>
+    </ControlTemplate>
+
+    <Style x:Key="StickyTreeViewStyle" TargetType="{x:Type TreeView}">
+        <Setter Property="Template" Value="{StaticResource StickyTreeViewTemplate}"/>
         <Setter Property="ItemsPanel">
             <Setter.Value>
                 <ItemsPanelTemplate>
@@ -35,19 +45,6 @@
                 <Style TargetType="TreeViewItem">
                     <Setter Property="IsExpanded" Value="{Binding IsExpanded, Mode=TwoWay}" />
                 </Style>
-            </Setter.Value>
-        </Setter>
-        <Setter Property="StickyHeaderContentTemplate">
-            <Setter.Value>
-                <ControlTemplate TargetType="HeaderedContentControl">
-                    <Border Background="LightYellow" Padding="20,0,0,0">
-                        <StackPanel>
-                            <ContentPresenter Content="{TemplateBinding Header}"
-                                              ContentTemplate="{TemplateBinding ContentTemplate}"/>
-                            <ContentPresenter Content="{TemplateBinding Content}"/>
-                        </StackPanel>
-                    </Border>
-                </ControlTemplate>
             </Setter.Value>
         </Setter>
     </Style>

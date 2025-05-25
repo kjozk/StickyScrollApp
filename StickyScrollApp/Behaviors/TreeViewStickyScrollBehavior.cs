@@ -18,7 +18,7 @@ namespace StickyScrollApp.Controls
     /// テンプレートパーツを持つ <see cref="TreeView"/> の <see cref="ControlTemplate"/> でのみ動作します。
     /// これらのパーツが存在しない場合、Stickyヘッダー機能は動作しません。
     /// </remarks>
-    public class StickyTreeViewBehavior : Behavior<TreeView>
+    public class TreeViewStickyScrollBehavior : Behavior<TreeView>
     {
         // テンプレート内で参照するScrollViewerのパーツ名
         public const string PART_ScrollViewer = "PART_ScrollViewer";
@@ -27,10 +27,10 @@ namespace StickyScrollApp.Controls
         public const string PART_StickyHeaderControl = "PART_StickyHeaderControl";
 
         // ヘッダー高さのデフォルト値
-        private const double DefaultHeaderElementHeight = 24.0;
+        private const double DEFAULT_HEADER_HEIGHT = 24.0;
 
         // Stickyヘッダーの最大高さ比率（ScrollViewer高さの50%まで）
-        private const double StickyHeaderMaxHeightRatio = 0.5;
+        private const double STICKY_HEADER_MAX_HEIGHT_RATIO = 0.5;
 
         // スクロールビュー
         private ScrollViewer _scrollViewer;
@@ -38,12 +38,15 @@ namespace StickyScrollApp.Controls
         // Stickyヘッダー
         private HeaderedContentControl _stickyHeaderControl;
 
+        // Stickyヘッダーに表示されている祖先ノードのDataContextリスト
+        private List<object> _stickyHeaderAncestors = new List<object>();
+
         // Stickyスクロールの有効/無効を切り替える依存プロパティ
         public static readonly DependencyProperty AllowStickyScrollProperty =
             DependencyProperty.Register(
                 nameof(AllowStickyScroll),
                 typeof(bool),
-                typeof(StickyTreeViewBehavior),
+                typeof(TreeViewStickyScrollBehavior),
                 new PropertyMetadata(true, OnAllowStickyScrollChanged));
 
         /// <summary>
@@ -60,7 +63,7 @@ namespace StickyScrollApp.Controls
             DependencyProperty.Register(
                 nameof(StickyHeaderContentTemplate),
                 typeof(ControlTemplate),
-                typeof(StickyTreeViewBehavior),
+                typeof(TreeViewStickyScrollBehavior),
                 new PropertyMetadata(null));
 
         /// <summary>
@@ -70,6 +73,14 @@ namespace StickyScrollApp.Controls
         {
             get => (ControlTemplate)GetValue(StickyHeaderContentTemplateProperty);
             set => SetValue(StickyHeaderContentTemplateProperty, value);
+        }
+
+        /// <summary>
+        /// Stickyヘッダーに表示されている祖先ノードのDataContextリスト（ルートに近い順）
+        /// </summary>
+        public IReadOnlyList<object> StickyHeaderAncestors
+        {
+            get => _stickyHeaderAncestors;
         }
 
         /// <summary>
@@ -118,7 +129,7 @@ namespace StickyScrollApp.Controls
         /// <param name="e">プロパティ変更イベント引数</param>
         private static void OnAllowStickyScrollChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
-            var behavior = d as StickyTreeViewBehavior;
+            var behavior = d as TreeViewStickyScrollBehavior;
             behavior?.UpdateStickyHeaders();
         }
 
@@ -143,28 +154,27 @@ namespace StickyScrollApp.Controls
                 return;
             }
 
-            UpdateStickyHeaderWidth(_scrollViewer, _stickyHeaderControl);
-
             bool clear = true;
 
             try
             {
-                if (!AllowStickyScroll)
+                // Stickyスクロールが無効な場合は何もしない
+                if (!this.AllowStickyScroll || _scrollViewer.VerticalOffset == 0)
                 {
                     return;
                 }
 
-                if (_scrollViewer.VerticalOffset == 0)
-                {
-                    return;
-                }
+                // Stickyヘッダーの幅をScrollViewerの表示領域に合わせる
+                UpdateStickyHeaderWidth(_scrollViewer, _stickyHeaderControl);
 
+                // スクロール位置から最上部のTreeViewItemを取得
                 TreeViewItem topItem = FindTopVisibleTreeViewItem(_scrollViewer, _stickyHeaderControl);
                 if (topItem == null)
                 {
                     return;
                 }
 
+                // 最上部のTreeViewItemの祖先リストを取得
                 List<object> ancestors = GetAncestors(topItem).Reverse().Select(a => a.DataContext).ToList();
                 if (!ancestors.Any())
                 {
@@ -174,16 +184,17 @@ namespace StickyScrollApp.Controls
                 clear = false;
 
                 // 祖先リストが現在のStickyヘッダーと異なる場合のみ再構築
-                if (!IsSameHeaderHierarchy(_stickyHeaderControl, ancestors))
+                if (!_stickyHeaderAncestors.SequenceEqual(ancestors))
                 {
                     try
                     {
                         RebuildStickyHeaderHierarchy(
                             _stickyHeaderControl,
                             ancestors,
-                            StickyHeaderContentTemplate,
-                            _scrollViewer.ViewportHeight * StickyHeaderMaxHeightRatio
+                            this.StickyHeaderContentTemplate,
+                            _scrollViewer.ViewportHeight * STICKY_HEADER_MAX_HEIGHT_RATIO
                         );
+                        _stickyHeaderAncestors = ancestors;
                     }
                     catch (Exception ex)
                     {
@@ -203,6 +214,7 @@ namespace StickyScrollApp.Controls
                 {
                     _stickyHeaderControl.Header = null;
                     _stickyHeaderControl.Content = null;
+                    _stickyHeaderAncestors.Clear();
                 }
             }
         }
@@ -244,48 +256,29 @@ namespace StickyScrollApp.Controls
 
             foreach (var ancestor in ancestors.Skip(1))
             {
-                var child = new HeaderedContentControl { Template = template, Header = ancestor };
-                parent.Content = child;
+                var child = parent.Content as HeaderedContentControl;
+                if (child == null)
+                {
+                    // 子HeaderedContentControlが存在しない場合は新規作成
+                    child = new HeaderedContentControl { Template = template, Header = ancestor };
+                    parent.Content = child;
+                }
+                else
+                {
+                    // 実体が既に存在する場合はHeaderのみ更新
+                    child.Header = ancestor;
+                }
                 parent = child;
 
                 // Stickyヘッダーの高さがScrollViewerの高さの半分を超えないようにする
                 if (root.ActualHeight > maxHeight)
                 {
-                    parent.Content = null;
                     break;
                 }
             }
-        }
 
-        /// <summary>
-        /// 現在のStickyヘッダーと、与えられた祖先ノードリストが一致しているか判定する。
-        /// </summary>
-        /// <param name="stickyHeaderControl">Stickyヘッダーコントロール</param>
-        /// <param name="ancestors">祖先TreeViewItemリスト</param>
-        /// <returns>一致していればtrue</returns>
-        private static bool IsSameHeaderHierarchy(HeaderedContentControl stickyHeaderControl, List<object> ancestors)
-        {
-            var headers = new List<object>();
-            HeaderedContentControl header = stickyHeaderControl;
-            do
-            {
-                headers.Add(header.Header);
-                header = header.Content as HeaderedContentControl;
-            } while (header != null);
-
-            if (headers.Count != ancestors.Count)
-            {
-                return false;
-            }
-
-            for (int i = 0; i < ancestors.Count; i++)
-            {
-                if (!object.Equals(headers[i], ancestors[i]))
-                {
-                    return false;
-                }
-            }
-            return true;
+            // 末尾のHeaderedContentControlのContentはnullにする
+            parent.Content = null;
         }
 
         /// <summary>
@@ -337,7 +330,7 @@ namespace StickyScrollApp.Controls
             int depth = GetStickyHeaderDepth(stickyHeaderControl);
             HeaderedContentControl current = stickyHeaderControl;
             // 既存のヘッダー深さから1段分の高さを推定
-            double headerElementHeight = (depth > 0) ? (current.ActualHeight / depth) : DefaultHeaderElementHeight;
+            double headerElementHeight = (depth > 0) ? (current.ActualHeight / depth) : DEFAULT_HEADER_HEIGHT;
             return headerElementHeight * headerCount;
         }
 

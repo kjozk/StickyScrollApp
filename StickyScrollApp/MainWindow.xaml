@@ -11,7 +11,8 @@
     <Grid>
         <TreeView ItemsSource="{Binding RootItems}" Margin="10" BorderThickness="1" Style="{StaticResource StickyTreeViewStyle}">
             <i:Interaction.Behaviors>
-                <controls:StickyTreeViewBehavior AllowStickyScroll="True" StickyHeaderContentTemplate="{StaticResource StickyHeaderTemplate}"/>
+                <controls:TreeViewStickyScrollBehavior AllowStickyScroll="True"
+                                                       StickyHeaderContentTemplate="{StaticResource StickyHeaderTemplate}"/>
             </i:Interaction.Behaviors>
         </TreeView>
     </Grid>

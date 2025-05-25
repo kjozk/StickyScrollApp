@@ -58,7 +58,7 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
-    <Compile Include="Behaviors\StickyTreeViewBehavior.cs" />
+    <Compile Include="Behaviors\TreeViewStickyScrollBehavior.cs" />
     <Compile Include="ViewModels\TreeItemViewModel.cs" />
     <Page Include="Themes\Generic.xaml">
       <Generator>MSBuild:Compile</Generator>
